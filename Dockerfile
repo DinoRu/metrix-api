@@ -18,7 +18,7 @@ RUN pip install --upgrade pip
 RUN pip install --prefix=/install --no-cache-dir -r requirements.txt gunicorn uvicorn
 
 # Copier le code de l'application
-COPY app/ .
+COPY app /app/app
 
 # =========================
 # Étape 2 : Image finale
