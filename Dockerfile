@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 # Copier requirements et installer dans un répertoire temporaire
 COPY requirements.txt .
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt gunicorn
 
 # Copier le code de l'application
 COPY app/ .
