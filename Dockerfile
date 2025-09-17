@@ -1,3 +1,6 @@
+# =========================
+# Étape 1 : Builder
+# =========================
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
@@ -9,21 +12,36 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copier requirements et installer
+# Copier requirements et installer dans un répertoire temporaire
 COPY requirements.txt .
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
 
-# Copier code
+# Copier le code de l'application
 COPY app/ .
 
-# Image finale
+# =========================
+# Étape 2 : Image finale
+# =========================
 FROM python:3.11-slim
 
 WORKDIR /app
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+# Installer les dépendances système de runtime
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copier packages Python et binaires depuis le builder
+COPY --from=builder /install /usr/local
 COPY --from=builder /app /app
 
+# Exposer le port de l'API
 EXPOSE 8000
 
+# Définir les variables d'environnement (optionnel si déjà dans docker-compose)
+# ENV PYTHONUNBUFFERED=1
+
+# Commande par défaut : Gunicorn pour l'API
 CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--log-level", "info"]
