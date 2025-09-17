@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: meter_prometheus
+    volumes:
+      - ./api/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - meter_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: meter_grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./api/grafana-dashboard.json:/var/lib/grafana/dashboards/dashboard.json
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+    ports:
+      - "3001:3000"
+    networks:
+      - meter_network
+
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: meter_postgres_exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:postgres123@postgres:5432/meter_reading?sslmode=disable"
+    ports:
+      - "9187:9187"
+    networks:
+      - meter_network
+
+  redis_exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: meter_redis_exporter
+    environment:
+      REDIS_ADDR: "redis:6379"
+    ports:
+      - "9121:9121"
+    networks:
+      - meter_network
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  meter_network:
+    external: true

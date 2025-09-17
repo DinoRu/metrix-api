@@ -1,0 +1,94 @@
+# ========================
+# Python / FastAPI
+# ========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.pkl
+
+# ========================
+# Virtual env & dépendances
+# ========================
+.venv/
+venv/
+ENV/
+env/
+.env
+.env.*
+*.lock
+
+# ========================
+# Logs & Debug
+# ========================
+*.log
+*.pid
+*.seed
+*.pid.lock
+*.db
+*.sqlite3
+
+# ========================
+# Tests & Coverage
+# ========================
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+.cache/
+
+# ========================
+# MyPy / Ruff / Linters
+# ========================
+.mypy_cache/
+.dmypy.json
+.dmypy.json
+ruff_cache/
+
+# ========================
+# Alembic (migrations DB)
+# ========================
+alembic/versions/__pycache__/
+alembic/versions/*.pyc
+# ⚠️ On garde alembic/versions/*.py pour versionner les migrations
+
+# ========================
+# Docker
+# ========================
+/docker-compose.override.yml
+.docker/
+docker-data/
+tmp/
+*.pid
+
+# ========================
+# Static & Media
+# ========================
+/static/
+/media/
+
+# ========================
+# IDEs & OS
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ========================
+# Déploiement VPS
+# ========================
+# Clés SSH ou certif SSL locaux
+*.pem
+*.key
+*.crt
+*.csr
+
+# Ne pas push les backups / dump DB
+backups/
+*.sql
+*.dump
