@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 # Copier requirements et installer dans un répertoire temporaire
 COPY requirements.txt .
 RUN pip install --upgrade pip
-RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 # Copier le code de l'application
 COPY app/ .
@@ -42,6 +42,6 @@ EXPOSE 8000
 
 # Définir les variables d'environnement (optionnel si déjà dans docker-compose)
 # ENV PYTHONUNBUFFERED=1
-
+ENV PATH="/usr/local/bin:$PATH"
 # Commande par défaut : Gunicorn pour l'API
 CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--log-level", "info"]
