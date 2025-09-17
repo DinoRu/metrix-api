@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 # Copier requirements et installer dans un répertoire temporaire
 COPY requirements.txt .
 RUN pip install --upgrade pip
-RUN pip install --prefix=/install --no-cache-dir -r requirements.txt gunicorn uvicorn
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt gunicorn uvicorn itsdangerous
 
 # Copier le code de l'application
 COPY app /app/app
