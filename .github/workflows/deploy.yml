@@ -39,8 +39,8 @@ jobs:
             git reset --hard origin/main
             git pull origin main
             # Pull la dernière image depuis Docker Hub
-            docker-compose pull
+            sudo docker-compose pull
             # Relancer tous les conteneurs en production
-            docker-compose up -d --remove-orphans
+            sudo docker-compose up -d --remove-orphans
             # Nettoyage optionnel
-            docker system prune -af
+            sudo docker system prune -af
