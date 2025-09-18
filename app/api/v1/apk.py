@@ -32,6 +32,6 @@ async def get_app_version():
 
     latest = files[0]["Key"]  # ex: apk/mon_app_v1.2.0.apk
     version = latest.split("_v")[-1].replace(".apk", "")  # extrait "1.2.0"
-    url = f"https://s3.beget.com/{BUCKET_NAME}/{latest}"
+    url = f"{S3Config.ENDPOINT_URL}/{BUCKET_NAME}/{latest}"
 
     return {"version": version, "url": url}
