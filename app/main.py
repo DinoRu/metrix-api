@@ -20,14 +20,14 @@ from app.middleware.security import SecurityHeadersMiddleware
 from app.monitoring import metrics
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('logs/api.log') if not settings.DEBUG else logging.StreamHandler()
-    ]
-)
+# logging.basicConfig(
+#     level=logging.INFO if not settings.DEBUG else logging.DEBUG,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     handlers=[
+#         logging.StreamHandler(sys.stdout),
+#         logging.FileHandler('logs/api.log') if not settings.DEBUG else logging.StreamHandler()
+#     ]
+# )
 
 logger = logging.getLogger(__name__)
 

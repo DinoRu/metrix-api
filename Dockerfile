@@ -37,6 +37,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /install /usr/local
 COPY --from=builder /app /app
 
+
 # Exposer le port de l'API
 EXPOSE 8000
 
