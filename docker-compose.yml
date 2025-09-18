@@ -1,5 +1,3 @@
-
-
 services:
   # API FastAPI
   api:
@@ -13,6 +11,9 @@ services:
     depends_on:
       - db
       - redis
+    volumes:
+      - ./alembic.ini:/app/alembic.ini
+      - ./alembic:/app/alembic
 
   # Celery worker
   celery_worker:
@@ -25,6 +26,9 @@ services:
     depends_on:
       - redis
       - db
+    volumes:
+      - ./alembic.ini:/app/alembic.ini
+      - ./alembic:/app/alembic
 
   # Celery beat
   celery_beat:
@@ -36,8 +40,23 @@ services:
       - ./app/.env
     depends_on:
       - redis
+    volumes:
+      - ./alembic.ini:/app/alembic.ini
+      - ./alembic:/app/alembic
 
- # PostgreSQL
+  # Service migrations (exécuté à la demande)
+  migrate:
+    build: .
+    command: alembic upgrade head
+    depends_on:
+      - db
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./alembic.ini:/app/alembic.ini
+      - ./alembic:/app/alembic
+
+  # PostgreSQL
   db:
     image: postgres:17
     container_name: db
