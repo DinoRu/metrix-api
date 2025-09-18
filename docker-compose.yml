@@ -14,6 +14,8 @@ services:
     volumes:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
+    networks:
+      - app-network
 
   # Celery worker
   celery_worker:
@@ -29,6 +31,8 @@ services:
     volumes:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
+    networks:
+      - app-network
 
   # Celery beat
   celery_beat:
@@ -43,6 +47,8 @@ services:
     volumes:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
+    networks:
+      - app-network
 
   # Service migrations (exécuté à la demande)
   migrate:
@@ -55,6 +61,8 @@ services:
     volumes:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
+    networks:
+      - app-network
 
   # PostgreSQL
   db:
@@ -67,6 +75,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
 
   # Redis
   redis:
@@ -75,6 +85,8 @@ services:
     restart: always
     volumes:
       - redis_data:/data
+    networks:
+      - app-network
 
   # NGINX HTTP (initial)
   nginx:
@@ -85,7 +97,14 @@ services:
       - "80:80"
     depends_on:
       - api
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  app-network:
+    driver: bridge
+
