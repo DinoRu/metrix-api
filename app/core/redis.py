@@ -15,7 +15,7 @@ async def init_redis():
 
 	try:
 		redis_pool = redis.ConnectionPool.from_url(
-			settings.REDIS_URL,
+			settings.REDIS_URL if settings.DEBUG else settings.PRO_REDIS_URL,
 			max_connections=settings.REDIS_POOL_SIZE,
 			decode_responses=True,
 			health_check_interval=30

@@ -17,7 +17,7 @@ from app.models import user, meter, reading, photo, outbox, task
 from app.config import settings
 
 def get_url():
-    return settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+    return settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://") if settings.DEBUG else settings.PROD_DB_URL
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
