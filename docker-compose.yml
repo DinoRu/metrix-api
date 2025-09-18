@@ -16,12 +16,6 @@ services:
       - ./alembic:/app/alembic
     networks:
       - app-network
-    healthcheck:
-      test: [ "CMD", "sh", "-lc", "wget -qO- http://127.0.0.1:8000/health || exit 1" ]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
 
   # Celery worker
   celery_worker:
@@ -102,8 +96,7 @@ services:
     ports:
       - "80:80"
     depends_on:
-      api:
-        condition: service_healthy
+      - api
 
     networks:
       - app-network
