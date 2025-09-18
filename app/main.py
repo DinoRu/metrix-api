@@ -77,7 +77,7 @@ app = FastAPI(
         {"name": "websocket", "description": "Real-time WebSocket connections"},
         {"name": "monitoring", "description": "System monitoring"},
     ],
-    docs_url="/docs" if settings.DEBUG else "/api-docs",
+    docs_url="/docs",
     redoc_url="/redoc" if settings.DEBUG else None,
     openapi_url="/openapi.json" if settings.DEBUG else "/api/openapi.json",
 )
