@@ -85,14 +85,12 @@ services:
     container_name: flower
     restart: always
     command: >
-      flower --broker=redis://redis:6379/0
-             --broker_api=redis://redis:6379/0
-             --port=5555
-    ports:
-      - "5555:5555"
+      celery --broker=redis://redis:6379/0
+             flower --port=5555 --url_prefix=/flower
     depends_on:
       - redis
-
+    expose:
+      - "5555"
   # Redis
   redis:
     image: redis:7
