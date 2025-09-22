@@ -20,7 +20,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/", response_model=List[UserProfileResponse], status_code=status.HTTP_200_OK)
+@router.get("/users", response_model=List[UserProfileResponse], status_code=status.HTTP_200_OK)
 async def get_users(
         session = Depends(get_session),
         # current_user: User = Depends(require_role([UserRole.ADMIN]))
