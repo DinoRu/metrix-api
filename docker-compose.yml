@@ -91,6 +91,8 @@ services:
       - redis
     expose:
       - "5555"
+    networks:
+      - app-network
   # Redis
   redis:
     image: redis:7
