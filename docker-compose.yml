@@ -95,7 +95,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: flower
-    command: celery --broker=${PRO_REDIS_URL} -A app.core.celery_app flower --port=5555
+    command: celery --broker=${PRO_REDIS_URL} -A app.core.celery_app flower --port=5555 --address=0.0.0.0
     restart: unless-stopped
     env_file:
       - ./app/.env
