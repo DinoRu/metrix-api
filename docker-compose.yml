@@ -28,6 +28,8 @@ services:
     depends_on:
       - redis
       - db
+      - api
+
     volumes:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
@@ -44,13 +46,13 @@ services:
       - ./app/.env
     depends_on:
       - redis
+      - api
     volumes:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
     networks:
       - app-network
 
-  # Service migrations (exécuté à la demande)
   migrate:
     build: .
     command: alembic upgrade head
@@ -78,6 +80,19 @@ services:
     networks:
       - app-network
 
+  flower:
+    image: mher/flower
+    container_name: flower
+    restart: always
+    command: >
+      flower --broker=redis://redis:6379/0
+             --broker_api=redis://redis:6379/0
+             --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+
   # Redis
   redis:
     image: redis:7
@@ -88,7 +103,6 @@ services:
     networks:
       - app-network
 
-  # NGINX HTTP (initial)
   nginx:
     image: nginx:alpine
     volumes:
@@ -97,6 +111,7 @@ services:
       - "80:80"
     depends_on:
       - api
+      - flower
 
     networks:
       - app-network
