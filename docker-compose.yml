@@ -21,7 +21,7 @@ services:
   celery_worker:
     build: .
     container_name: celery_worker
-    command: celery -A app.core.celery_app worker --loglevel=INFO
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=INFO
     restart: always
     env_file:
       - ./app/.env
@@ -40,7 +40,7 @@ services:
   celery_beat:
     build: .
     container_name: celery_beat
-    command: celery -A app.core.celery_app beat --loglevel=INFO
+    command: celery -A app.core.celery_app.celery_app beat --loglevel=INFO
     restart: always
     env_file:
       - ./app/.env

@@ -18,3 +18,5 @@ celery_app.conf.update(
     task_track_started=True,
     include=["app.tasks.meter_import"],
 )
+
+celery_app.autodiscover_tasks(["celery_app"])
