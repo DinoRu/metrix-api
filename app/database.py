@@ -70,7 +70,7 @@ async def init_db():
 # car Celery fonctionne mieux avec SQLAlchemy sync.
 
 engine_sync = create_engine(
-    settings.DATABASE_URL if settings.DEBUG else settings.PROD_DB_URL,
+    settings.DATABASE_URL if settings.DEBUG else settings.PROD_DB_URL.replace("postgresql+asyncpg://", "postgresql://"),
     pool_pre_ping=True,
     pool_size=settings.DB_POOL_SIZE,
     max_overflow=settings.DB_MAX_OVERFLOW,
