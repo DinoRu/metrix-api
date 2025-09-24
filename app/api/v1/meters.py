@@ -1,3 +1,4 @@
+import base64
 import logging
 from typing import Optional
 
@@ -17,7 +18,7 @@ from app.schemas.meter import MeterResponse, MeterCreate, MeterUpdate, MeterImpo
     MeterListResponse
 from app.schemas.reading import ReadingResponse
 from app.services.meter_service import MeterService
-
+from app.workers.import_meter_from_import import import_meters_from_file
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -315,6 +316,30 @@ async def enqueue_import_meters(
         "status_url": f"/api/v1/meters/{task.id}/status",
         "detail": "Import task enqueued",
     }
+
+@router.post("/upload-file")
+async def import_meters(
+    file: UploadFile,
+    user: User = Depends(require_role([UserRole.ADMIN]))
+):
+    """
+    Endpoint synchrone pour importer un fichier Excel de compteurs.
+    """
+    try:
+        # Lecture fichier en mémoire
+        raw_content = await file.read()
+        file_content_b64 = base64.b64encode(raw_content).decode("utf-8")
+
+        result = import_meters_from_file(
+            file_content_b64=file_content_b64,
+            file_name=file.filename,
+            user_id=user.id,
+            file_type=file.filename.split(".")[-1],
+        )
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/{task_id}/status")
 async def get_task_status(task_id: str, current_user=Depends(require_role([UserRole.ADMIN]))):

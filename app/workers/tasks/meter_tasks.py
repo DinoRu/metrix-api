@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 from openpyxl import load_workbook
 
 from app.core.celery_app import celery_app
-from app.database import SessionLocal
+from app.database import SessionLocalSync
 from app.models.meter import Meter
 from app.models.task import TaskResult, TaskStatus
 
@@ -85,7 +85,7 @@ def import_meters_from_file(
                 db.rollback()  # on abandonne la MAJ de progression si la DB est KO
 
     tid = task_id or self.request.id
-    db = SessionLocal()
+    db = SessionLocalSync()
     try:
         # Assure un enregistrement TaskResult (si non créé côté API)
         tr = db.execute(select(TaskResult).where(TaskResult.id == tid)).scalar_one_or_none()
