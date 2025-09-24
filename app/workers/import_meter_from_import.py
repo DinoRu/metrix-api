@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from openpyxl import load_workbook
 
-from app.database import AsyncSessionLocal
+from app.database import SessionLocalSync
 from app.models.meter import Meter
 from app.models.task import TaskResult, TaskStatus
 
@@ -58,7 +58,7 @@ def import_meters_from_file(
             db.rollback()
 
     tid = task_id or f"manual-{datetime.utcnow().timestamp()}"
-    db = AsyncSessionLocal
+    db = SessionLocalSync()
     try:
         # Assurer un enregistrement TaskResult (si non existant)
         tr = db.execute(select(TaskResult).where(TaskResult.id == tid)).scalar_one_or_none()
