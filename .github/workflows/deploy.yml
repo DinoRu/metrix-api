@@ -64,7 +64,7 @@ jobs:
             git reset --hard origin/main
 
             echo "[2/6] Pull bases (postgres, redis, nginx) pour maj security"
-            docker compose -f docker-compose.yml pull db redis nginx || true
+            docker compose -f docker-compose.yml pull db redis || true
 
             echo "[3/6] Construire et relancer (sans registre)"
             # --build reconstruit api/celery/flower/migrate à partir du Dockerfile local

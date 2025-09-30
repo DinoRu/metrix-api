@@ -138,20 +138,19 @@ services:
       retries: 10
       start_period: 5s
 
-  # Nginx reverse proxy
-  nginx:
-    image: nginx:alpine
-    container_name: nginx
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    ports:
-      - "80:80"
-    depends_on:
-      - api
-      - flower
-
-    networks:
-      - app-network
+#  # Nginx reverse proxy
+#  nginx:
+#    image: nginx:alpine
+#    container_name: nginx
+#    volumes:
+#      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+#    ports:
+#      - "80:80"
+#    depends_on:
+#      - api
+#
+#    networks:
+#      - app-network
 
 # Persistent volumes
 volumes:
