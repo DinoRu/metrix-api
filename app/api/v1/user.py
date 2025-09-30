@@ -1,5 +1,5 @@
 import logging
-import uuid
+
 from datetime import datetime
 from typing import List
 from uuid import UUID
@@ -8,77 +8,25 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import update, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-from app.auth.dependencies import get_current_user, require_role
+from app.auth.dependencies import get_current_user, get_current_admin
 from app.auth.jwt import auth_service
 from app.database import get_session
-from app.models.user import User, UserRole
-from app.schemas.auth import UserResponse, ChangePasswordRequest, UpdateProfileRequest, UserProfileResponse
+from app.models.user import User
+from app.schemas.auth import UserResponse, UpdateProfileRequest, UserProfileResponse, AdminChangePasswordRequest
 
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
-
 @router.get("/users", response_model=List[UserProfileResponse], status_code=status.HTTP_200_OK)
 async def get_users(
-        session = Depends(get_session),
-        # current_user: User = Depends(require_role([UserRole.ADMIN]))
+        session: AsyncSession = Depends(get_session),
+        _: User = Depends(get_current_admin)
 ):
     stmt = select(User)
     result = await session.execute(stmt)
     users = result.scalars().all()
-
     return users
-
-
-@router.post("/change-password", response_model=UserResponse)
-async def change_password(
-    request: ChangePasswordRequest,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session)
-):
-    """
-    Modifie le mot de passe de l'utilisateur sans vérification OTP ou email.
-
-    Paramètres:
-    - **current_password**: Mot de passe actuel
-    - **new_password**: Nouveau mot de passe
-
-    Retourne:
-    - Les informations de l'utilisateur mis à jour
-    """
-    try:
-        # Vérifier le mot de passe actuel
-        if not auth_service.verify(request.current_password, current_user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Mot de passe actuel incorrect"
-            )
-
-        # Hacher le nouveau mot de passe
-        hashed_password = auth_service.hash_password(request.new_password)
-
-        # Mettre à jour le mot de passe dans la base de données
-        await db.execute(
-            update(User)
-            .where(User.id == current_user.id)
-            .values(hashed_password=hashed_password)
-        )
-        await db.commit()
-
-        # Rafraîchir l'utilisateur pour retourner les données à jour
-        await db.refresh(current_user)
-        return UserResponse.from_orm(current_user)
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erreur lors du changement de mot de passe: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erreur lors du changement de mot de passe"
-        )
 
 @router.get("/profile", response_model=UserResponse)
 async def get_profile(
@@ -86,38 +34,68 @@ async def get_profile(
     db: AsyncSession = Depends(get_session)
 ):
     """
-    Récupère le profil de l'utilisateur actuel.
+    Retrieves the profile of the current user.
 
-    Retourne:
-    - Les informations de l'utilisateur (id, username, full_name, role, is_active)
+    Returns:
+    - User information (id, username, full_name, role, is_active)
     """
     try:
         return UserResponse.from_orm(current_user)
     except Exception as e:
-        logger.error(f"Erreur lors de la récupération du profil: {str(e)}")
+        logger.error(f"Error retrieving profile: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erreur lors de la récupération du profil"
+            detail="Error retrieving profile"
+        )
+
+@router.put("/{user_id}/password", response_model=UserResponse, status_code=status.HTTP_200_OK)
+async def admin_change_password(
+        user_id: UUID,
+        body: AdminChangePasswordRequest,
+        session: AsyncSession = Depends(get_session),
+        _: User = Depends(get_current_admin)
+):
+    if body.user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inconsistent user_id between URL and request")
+    result = await session.execute(
+        select(User).where(User.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    try:
+        hashed = auth_service.hash_password(body.new_password)
+        await session.execute(
+            update(User).where(User.id == user_id).values(hashed_password=hashed, updated_at=datetime.utcnow())
+        )
+        await session.commit()
+        await session.refresh(user)
+        return UserResponse.from_orm(user)
+    except Exception as e:
+        logger.error(f"Error changing password: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error changing password"
         )
 
 @router.put("/update/{user_id}", response_model=UserProfileResponse)
 async def update_profile(
     user_id: UUID,
     user_data: UpdateProfileRequest,
-    current_user=Depends(require_role([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_session),
+    _: User = Depends(get_current_admin)
 ):
     """
-    Met à jour le profil d'un utilisateur (par ID).
-    Seuls les admins peuvent modifier les profils.
+    Updates a user's profile (by ID).
+    Only admins can modify profiles.
 
-    Paramètres possibles :
-    - **username**: Nouveau nom d'utilisateur
-    - **full_name**: Nouveau nom complet
-    - **role**: Nouveau rôle (facultatif)
+    Possible parameters:
+    - **username**: New username
+    - **full_name**: New full name
+    - **role**: New role (optional)
 
-    Retourne :
-    - Les informations de l'utilisateur mis à jour
+    Returns:
+    - Updated user information
     """
     stmt = select(User).where(User.id == user_id)
     result = await db.execute(stmt)
@@ -126,14 +104,14 @@ async def update_profile(
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Utilisateur introuvable"
+            detail="User not found"
         )
 
     try:
         update_data = user_data.model_dump(exclude_unset=True)
 
-        # Sécurité : éviter la mise à jour de champs sensibles
-        protected_fields = {"id", "created_at", "updated_at", "password"}
+        # Security: Prevent updating sensitive fields
+        protected_fields = {"id", "created_at", "updated_at", "hashed_password"}
         for field in protected_fields:
             update_data.pop(field, None)
 
@@ -151,59 +129,56 @@ async def update_profile(
         raise
     except Exception as e:
         await db.rollback()
-        logger.error(
-            f"Erreur lors de la mise à jour du profil {user_id}: {str(e)}"
-        )
+        logger.error(f"Error updating profile {user_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erreur interne lors de la mise à jour du profil"
+            detail="Internal error while updating profile"
         )
-
 
 @router.delete("/profile/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_profile(
     user_id: UUID,
-    current_user: User = Depends(require_role([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_session),
+    current_admin: User = Depends(get_current_admin)
 ):
     """
-    Supprime définitivement le compte d'un utilisateur spécifié par son ID (réservé aux admins).
+    Permanently deletes a user's account specified by their ID (admin only).
 
-    Retourne :
-    - **204 No Content** si la suppression est réussie.
+    Returns:
+    - **204 No Content** if deletion is successful.
     """
     try:
-        # Vérifier si l'utilisateur existe
+        # Check if the user exists
         result = await db.execute(select(User).where(User.id == user_id))
         target_user = result.scalar_one_or_none()
 
         if not target_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Utilisateur avec l'ID {user_id} non trouvé",
+                detail=f"User with ID {user_id} not found"
             )
 
-        # Empêcher l'admin de se supprimer lui-même
-        if target_user.id == current_user.id:
+        # Prevent admin from deleting their own account
+        if target_user.id == current_admin.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Un administrateur ne peut pas supprimer son propre compte",
+                detail="An administrator cannot delete their own account"
             )
 
-        # Supprimer le compte définitivement
+        # Permanently delete the account
         await db.execute(delete(User).where(User.id == user_id))
         await db.commit()
 
-        logger.info(f"Utilisateur supprimé définitivement (ID: {user_id})")
+        logger.info(f"User permanently deleted (ID: {user_id})")
 
-        # Pas de retour → 204 No Content
+        # No return → 204 No Content
         return None
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erreur lors de la suppression du compte (ID: {user_id}): {str(e)}")
+        logger.error(f"Error deleting account (ID: {user_id}): {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erreur interne lors de la suppression du compte",
+            detail="Internal error while deleting account"
         )

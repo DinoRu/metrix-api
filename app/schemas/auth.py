@@ -11,6 +11,7 @@ class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3)
     password: str = Field(..., min_length=6)
 
+
 class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3)
     password: str = Field(..., min_length=8)
@@ -25,10 +26,12 @@ class RegisterRequest(BaseModel):
             raise ValueError("Password must contain at least")
         return v
 
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
 
 class UserResponse(BaseModel):
     id: UUID
@@ -51,6 +54,7 @@ class UserProfileResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class LoginResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -70,3 +74,8 @@ class UpdateProfileRequest(BaseModel):
     role: Optional[UserRole] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+	
+class AdminChangePasswordRequest(BaseModel):
+    user_id: UUID
+    new_password: str = Field(min_length=8)

@@ -5,6 +5,9 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 # Installer dépendances système
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -26,6 +29,11 @@ COPY app /app/app
 FROM python:3.11-slim
 
 WORKDIR /app
+
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/usr/local/bin:$PATH"
 
 # Installer les dépendances système de runtime
 RUN apt-get update && apt-get install -y \

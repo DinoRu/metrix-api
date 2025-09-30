@@ -10,6 +10,8 @@ from app.models.base import BaseModel
 class UserRole(str, enum.Enum):
 	ADMIN="admin"
 	CONTROLLER="controller"
+	SUB_ADMIN = "sub_admin"
+
 
 class User(Base, BaseModel):
 	__tablename__ = "users"

@@ -19,6 +19,12 @@ services:
       - ./alembic:/app/alembic
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
 
   # Celery worker for background tasks
   celery_worker:
@@ -30,10 +36,11 @@ services:
     restart: unless-stopped
     env_file:
       - ./app/.env
-
     depends_on:
-      - redis
-      - db
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     volumes:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
@@ -51,24 +58,27 @@ services:
     env_file:
       - ./app/.env
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     volumes:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
     networks:
       - app-network
 
-  # Database migration service
+  # Service utilitaire : on n'en fait pas un service permanent
   migrate:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: migrate
-    command: alembic upgrade head
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["alembic upgrade head"]
     env_file:
       - ./app/.env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
@@ -88,6 +98,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   # Celery Flower for task monitoring
   flower:
@@ -102,8 +118,10 @@ services:
     ports:
       - "5555:5555"
     depends_on:
-      - redis
-      - api  # Ajouter cette dépendance
+      redis:
+        - condition: service_healthy
+      api:
+        - condition: service_healthy
     networks:
       - app-network
 
@@ -116,6 +134,12 @@ services:
       - redis_data:/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
 
   # Nginx reverse proxy
   nginx:
@@ -126,8 +150,10 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - api
-      - flower
+      api:
+        - condition: service_healthy
+      flower:
+        - condition: service_healthy
     networks:
       - app-network
 

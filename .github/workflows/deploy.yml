@@ -1,46 +1,84 @@
-#name: CI/CD - FastAPI Production
-#
-#on:
-#  push:
-#    branches: [ "main" ]
-#
-#jobs:
-#  build-and-deploy:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      # 1️⃣ Checkout du repo
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#
-#      # 2️⃣ Login Docker
-#      - name: Docker Login
-#        uses: docker/login-action@v2
-#        with:
-#          username: ${{ secrets.DOCKER_USERNAME }}
-#          password: ${{ secrets.DOCKER_PASSWORD }}
-#
-#      # 3️⃣ Build et push de l'image
-#      - name: Build and Push Docker image
-#        run: |
-#          IMAGE=${{ secrets.DOCKER_USERNAME }}/metersync:latest
-#          docker build -t $IMAGE .
-#          docker push $IMAGE
-#
-#      # 4️⃣ Déploiement sur VPS via SSH
-#      - name: Deploy to VPS
-#        uses: appleboy/ssh-action@v1.0.3
-#        with:
-#          host: ${{ secrets.VPS_IP }}
-#          username: ${{ secrets.VPS_USER }}
-#          key: ${{ secrets.SSH_PRIVATE_KEY }}
-#          script: |
-#            cd /opt/metrix
-#            git reset --hard origin/main
-#            git pull origin main
-#            # Pull la dernière image depuis Docker Hub
-#            docker-compose pull
-#            # Relancer tous les conteneurs en production
-#            docker-compose up -d --remove-orphans
-#            # Nettoyage optionnel
-#            docker system prune -af
+name: CI/CD - FastAPI to VPS (no registry)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-metrix-main
+  cancel-in-progress: true
+
+jobs:
+  ci-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # --- CI rapide (facultatif mais recommandé) ---
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            pip-
+
+      - name: Install deps (CI only)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest flake8
+      - name: Lint
+        run: flake8 app || true
+      - name: Tests
+        run: pytest -q || true
+      # --- fin CI ---
+
+      # Déploiement sur le VPS : on build/relance localement au VPS, pas de registry
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+
+            PROJECT_DIR="/opt/metrix"
+            cd "$PROJECT_DIR"
+
+            echo "[1/6] Fetch + reset to origin/main"
+            git fetch --all
+            git checkout main
+            git reset --hard origin/main
+
+            echo "[2/6] Pull bases (postgres, redis, nginx) pour maj security"
+            docker compose -f docker-compose.yml pull db redis nginx || true
+
+            echo "[3/6] Construire et relancer (sans registre)"
+            # --build reconstruit api/celery/flower/migrate à partir du Dockerfile local
+            docker compose -f docker-compose.yml up -d --build --remove-orphans
+
+            echo "[4/6] Attendre que la DB soit healthy"
+            docker compose -f docker-compose.yml wait db || true
+
+            echo "[5/6] Migration (one-shot)"
+            # On force la migration dans un conteneur éphémère
+            docker compose -f docker-compose.yml run --rm migrate alembic upgrade head
+
+            echo "[6/6] Nettoyage"
+            docker image prune -f || true
+            docker builder prune -f || true
+
+            echo "✅ Deployed"
