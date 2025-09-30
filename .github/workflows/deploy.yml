@@ -87,7 +87,7 @@ jobs:
 
             echo "[5/6] Migration (one-shot)"
             # On force la migration dans un conteneur éphémère
-            docker compose -f docker-compose.yml run --rm migrate alembic upgrade head
+            docker compose -f docker-compose.yml run --rm migrate
 
             echo "[6/6] Nettoyage"
             docker image prune -f || true
