@@ -86,6 +86,8 @@ services:
     image: postgres:17
     container_name: db
     restart: unless-stopped
+    env_file:
+      - ./app/.env
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
