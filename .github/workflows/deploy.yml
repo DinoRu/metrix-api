@@ -71,7 +71,19 @@ jobs:
             docker compose -f docker-compose.yml up -d --build --remove-orphans
 
             echo "[4/6] Attendre que la DB soit healthy"
-            docker compose -f docker-compose.yml wait db || true
+            for i in $(seq 1 60); do
+              if docker compose -f docker-compose.yml exec -T db sh -lc 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'; then
+                echo "DB is ready."
+                break
+              fi
+              sleep 2
+              if [ "$i" -eq 60 ]; then
+                echo "DB not ready after timeout." >&2
+                docker compose -f docker-compose.yml logs db | tail -n 200 || true
+                exit 1
+              fi
+            done
+            
 
             echo "[5/6] Migration (one-shot)"
             # On force la migration dans un conteneur éphémère
