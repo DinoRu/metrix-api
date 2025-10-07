@@ -73,7 +73,7 @@ async def list_meters(
 @router.get("/with-readings", response_model=PaginatedResponse)
 async def list_meters_with_readings(
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=1000000),
     search: Optional[str] = None,
     status: Optional[str] = None,
     type: Optional[str] = None,
