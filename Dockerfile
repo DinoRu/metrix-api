@@ -47,10 +47,10 @@ COPY --from=builder /app /app
 
 
 # Exposer le port de l'API
-EXPOSE 8000
+EXPOSE 8001
 
 # Définir les variables d'environnement (optionnel si déjà dans docker-compose)
 # ENV PYTHONUNBUFFERED=1
 ENV PATH="/usr/local/bin:$PATH"
 # Commande par défaut : Gunicorn pour l'API
-CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--log-level", "info"]
+CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8001", "--log-level", "info"]
