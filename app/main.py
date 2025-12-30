@@ -32,9 +32,9 @@ from app.monitoring import metrics
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="MeterSync API",
+    title="Electron meter readings",
     description="""
-🚀 **MeterSync API** - Professional Meter Reading Management System
+🚀 **Electron meter API** - Professional Meter Reading Management System
 
  ## Features
 * 🔐 **JWT Authentication** with role-based access control
