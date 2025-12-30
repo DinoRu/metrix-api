@@ -34,27 +34,27 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="MeterSync API",
     description="""
-    🚀 **MeterSync API** - Professional Meter Reading Management System
+🚀 **MeterSync API** - Professional Meter Reading Management System
 
-    ## Features
-		* 🔐 **JWT Authentication** with role-based access control
-		* 📊 **Offline-First Sync** with conflict resolution
-		* 📸 **Photo Management** with S3 storage
-		* 📈 **Real-time Updates** via WebSocket
-		* 🔄 **Background Tasks** with Celery
-		* 📝 **Excel Import/Export** with validation
-		* 🌍 **Multi-language Support**
-		* 📱 **Mobile-Optimized** endpoints
+ ## Features
+* 🔐 **JWT Authentication** with role-based access control
+* 📊 **Offline-First Sync** with conflict resolution
+* 📸 **Photo Management** with S3 storage
+* 📈 **Real-time Updates** via WebSocket
+* 🔄 **Background Tasks** with Celery
+* 📝 **Excel Import/Export** with validation
+* 🌍 **Multi-language Support**
+* 📱 **Mobile-Optimized** endpoints
 
-    ## Documentation
-		* [Interactive API Docs](/docs)
-		* [Alternative Docs](/redoc)
-		* [Health Check](/health)
-		* [Metrics](/metrics)
+## Documentation
+* [Interactive API Docs](/docs)
+* [Alternative Docs](/redoc)
+* [Health Check](/health)
+* [Metrics](/metrics)
 
-    ## Support
-		* Email: support@metersync.com
-		* Documentation: https://docs.metersync.com
+## Support
+* Email: support@metersync.com
+* Documentation: https://docs.metersync.com
     """,
     version="1.0.0",
     terms_of_service="https://metersync.com/terms",
