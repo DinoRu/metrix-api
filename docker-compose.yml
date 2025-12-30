@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: api
+    container_name: electron-api
     restart: unless-stopped
     env_file:
       - ./app/.env
@@ -31,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: celery_worker
+    container_name: electron-celery_worker
     command: celery -A app.core.celery_app worker --loglevel=INFO
     restart: unless-stopped
     env_file:
@@ -50,7 +50,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: celery_beat
+    container_name: electron-celery_beat
     command: celery -A app.core.celery_app beat --loglevel=INFO
     restart: unless-stopped
     env_file:
@@ -68,7 +68,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: migrate
+    container_name: electron-migrate
     entrypoint: ["/bin/sh", "-c"]
     command: ["alembic upgrade head"]
     env_file:
@@ -108,7 +108,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: flower
+    container_name: flower_electron
     command: celery -A app.core.celery_app flower --port=5555 --address=0.0.0.0
     restart: unless-stopped
     env_file:
