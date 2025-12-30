@@ -10,7 +10,7 @@ services:
     env_file:
       - ./app/.env
     expose:
-      - "8001"
+      - "8001:8001"
     depends_on:
       - db
       - redis
@@ -20,7 +20,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8001/health"]
       interval: 15s
       timeout: 3s
       retries: 10
