@@ -125,7 +125,7 @@ services:
   # Redis for caching and Celery backend
   redis:
     image: redis:7
-    container_name: redis
+    container_name: electron-redis
     restart: unless-stopped
     volumes:
       - redis_data:/data
