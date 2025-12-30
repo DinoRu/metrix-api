@@ -135,7 +135,7 @@ class StorageService:
             file_extension = os.path.splitext(request.filename)[1].lower()
             file_id = str(uuid.uuid4())
             timestamp = datetime.now().strftime('%Y/%m/%d')
-            file_key = f"readings/{timestamp}/{file_id}{file_extension}"
+            file_key = f"readings-su/{timestamp}/{file_id}{file_extension}"
 
             # Métadonnées à ajouter au fichier
             metadata = {
