@@ -84,7 +84,7 @@ services:
   # PostgreSQL database
   db:
     image: postgres:17
-    container_name: db
+    container_name: db_electron
     restart: unless-stopped
     env_file:
       - ./app/.env
