@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, validator, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, field_validator, validator, ConfigDict
 
 from app.models.user import UserRole
 
@@ -16,14 +16,22 @@ class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3)
     password: str = Field(..., min_length=8)
     full_name: Optional[str] = None
+    department: str = Field(..., min_length=2)
     role: UserRole = UserRole.CONTROLLER
 
-    @validator("password")
+    @field_validator("password")
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters")
         if not any(char.isdigit() for char in v):
             raise ValueError("Password must contain at least")
+        return v
+    
+    
+    @field_validator("department")
+    def validate_department(cls, v: str) -> str:
+        if not v.startswith("DS"):
+            raise ValueError("Department must start with 'DS'")
         return v
 
 
@@ -37,6 +45,7 @@ class UserResponse(BaseModel):
     id: UUID
     username: str
     full_name: Optional[str]
+    department: str
     role: UserRole
     is_active: bool
 
@@ -47,6 +56,7 @@ class UserProfileResponse(BaseModel):
     id: UUID
     username: str
     full_name: Optional[str]
+    department: Optional[str]
     role: UserRole
     is_active: bool
     created_at: datetime

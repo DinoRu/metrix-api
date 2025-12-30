@@ -20,6 +20,7 @@ class User(Base, BaseModel):
 	hashed_password = Column(String(255), nullable=False)
 	full_name = Column(String(255))
 	role = Column(Enum(UserRole), nullable=False, default=UserRole.CONTROLLER)
+	department = Column(String(5), nullable=False)
 	is_active = Column(Boolean, default=True)
 
 	# Relationships

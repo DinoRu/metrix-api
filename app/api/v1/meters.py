@@ -18,6 +18,7 @@ from app.schemas.meter import MeterResponse, MeterCreate, MeterUpdate, MeterImpo
     MeterListResponse
 from app.schemas.reading import ReadingResponse
 from app.services.meter_service import MeterService
+from app.utils.query_filters import apply_department_filter
 from app.workers.import_meter_from_import import import_meters_from_file
 
 router = APIRouter()
@@ -38,6 +39,10 @@ async def list_meters(
     async with session as db:
         query = select(Meter)
 
+
+        # Department filter
+        query = apply_department_filter(query, current_user)
+        
         # Apply filters
         filters = []
         if search:
