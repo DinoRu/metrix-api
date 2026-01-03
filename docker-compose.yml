@@ -5,12 +5,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: electron-api
+    container_name: api
     restart: unless-stopped
     env_file:
       - ./app/.env
     expose:
-      - "8000:8000"
+      - "8000"
     depends_on:
       - db
       - redis
@@ -20,7 +20,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8001/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
       interval: 15s
       timeout: 3s
       retries: 10
@@ -31,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: electron-celery_worker
+    container_name: celery_worker
     command: celery -A app.core.celery_app worker --loglevel=INFO
     restart: unless-stopped
     env_file:
@@ -50,7 +50,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: electron-celery_beat
+    container_name: celery_beat
     command: celery -A app.core.celery_app beat --loglevel=INFO
     restart: unless-stopped
     env_file:
@@ -68,7 +68,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: electron-migrate
+    container_name: migrate
     entrypoint: ["/bin/sh", "-c"]
     command: ["alembic upgrade head"]
     env_file:
@@ -84,7 +84,7 @@ services:
   # PostgreSQL database
   db:
     image: postgres:17
-    container_name: db_electron
+    container_name: db
     restart: unless-stopped
     env_file:
       - ./app/.env
@@ -108,13 +108,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: flower_electron
+    container_name: flower
     command: celery -A app.core.celery_app flower --port=5555 --address=0.0.0.0
     restart: unless-stopped
     env_file:
       - ./app/.env
     ports:
-      - "5556:5555"
+      - "5555:5555"
     depends_on:
       - redis
       - api
@@ -125,7 +125,7 @@ services:
   # Redis for caching and Celery backend
   redis:
     image: redis:7
-    container_name: electron-redis
+    container_name: redis
     restart: unless-stopped
     volumes:
       - redis_data:/data
